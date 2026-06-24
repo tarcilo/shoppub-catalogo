@@ -13,9 +13,9 @@ export default async function AdminLogin({
     <div className="mx-auto max-w-sm px-4 py-20">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/shoppub-logo.svg"
+        src="/shoppub-logo.png"
         alt="Shoppub"
-        className="h-9 mx-auto mb-8"
+        className="w-48 h-auto mx-auto mb-8"
       />
       <h1 className="text-2xl font-bold text-center">Painel do Catálogo</h1>
       <p className="mt-2 text-center text-black/60 text-sm">
