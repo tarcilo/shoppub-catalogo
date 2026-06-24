@@ -124,6 +124,7 @@ function timingSafeEqual(a: string, b: string): boolean {
 const SUPER_ADMINS = new Set(
   [
     "tar@shoppub.com.br",
+    "josecarlos@shoppub.com.br",
     ...(process.env.SUPER_ADMINS?.split(",").map((e) =>
       e.trim().toLowerCase()
     ) ?? []),
