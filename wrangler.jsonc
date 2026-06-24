@@ -23,7 +23,7 @@
     {
       "binding": "DB",
       "database_name": "catalogo-shoppub",
-      "database_id": "PREENCHER_APOS_wrangler_d1_create",
+      "database_id": "e4cf2a1d-769a-411b-836d-3ac91eb3e8c7",
       "migrations_dir": "migrations"
     }
   ],
@@ -34,7 +34,7 @@
   "kv_namespaces": [
     {
       "binding": "CATALOG_KV",
-      "id": "PREENCHER_APOS_wrangler_kv_namespace_create"
+      "id": "45e7b65546cc4d589afce85b5bc99851"
     }
   ]
 
