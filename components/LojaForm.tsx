@@ -70,25 +70,39 @@ export function LojaForm({
         />
       </Field>
 
-      <div className="flex gap-4">
-        <Field label="Cor principal">
-          <input
-            name="primaryColor"
-            type="color"
-            defaultValue={tenant?.primaryColor ?? "#4a3b2a"}
-            className="h-10 w-16 rounded border border-black/15"
-          />
-        </Field>
-        <Field label="Logo (URL, opcional)">
-          <input
-            name="logo"
-            type="url"
-            defaultValue={tenant?.logo}
-            className={inputCls}
-            placeholder="https://.../logo.png"
-          />
-        </Field>
-      </div>
+      <Field label="Cor principal">
+        <input
+          name="primaryColor"
+          type="color"
+          defaultValue={tenant?.primaryColor ?? "#4a3b2a"}
+          className="h-10 w-16 rounded border border-black/15"
+        />
+      </Field>
+
+      <Field
+        label="Logo (opcional)"
+        hint="PNG, JPG, GIF, WEBP, AVIF ou SVG — até 2 MB"
+      >
+        {tenant?.logo && (
+          <div className="mb-2 flex items-center gap-2">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={tenant.logo}
+              alt="Logo atual"
+              className="h-10 w-auto rounded border border-black/10 bg-black/[0.03]"
+            />
+            <span className="text-xs text-black/40">
+              logo atual — envie um arquivo para substituir
+            </span>
+          </div>
+        )}
+        <input
+          name="logo"
+          type="file"
+          accept="image/png,image/jpeg,image/gif,image/webp,image/avif,image/svg+xml"
+          className="block w-full text-sm file:mr-3 file:rounded-md file:border-0 file:bg-black file:px-3 file:py-1.5 file:text-white file:text-sm hover:file:opacity-90"
+        />
+      </Field>
 
       <label className="flex items-center gap-2 text-sm">
         <input

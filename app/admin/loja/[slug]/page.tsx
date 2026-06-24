@@ -3,6 +3,7 @@ import Link from "next/link";
 import { requireAdmin } from "@/lib/admin-session";
 import { getTenantStore } from "@/lib/stores";
 import { parseLojaForm } from "@/lib/loja-form";
+import { saveLogo, LogoError } from "@/lib/logo";
 import { LojaForm } from "@/components/LojaForm";
 
 export default async function EditarLoja({
@@ -29,7 +30,22 @@ export default async function EditarLoja({
     if (!t || t.ownerEmail?.toLowerCase() !== me.toLowerCase()) {
       redirect("/admin/dashboard");
     }
-    await getTenantStore().update(slug, parseLojaForm(formData));
+
+    // mantém a logo atual se nenhum arquivo novo for enviado
+    let logo = t.logo;
+    const file = formData.get("logo");
+    if (file instanceof File && file.size > 0) {
+      try {
+        logo = await saveLogo(file, slug);
+      } catch (e) {
+        if (e instanceof LogoError) {
+          redirect(`/admin/loja/${slug}?erro=${encodeURIComponent(e.message)}`);
+        }
+        throw e;
+      }
+    }
+
+    await getTenantStore().update(slug, { ...parseLojaForm(formData), logo });
     redirect("/admin/dashboard");
   }
 

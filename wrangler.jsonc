@@ -40,6 +40,15 @@
       "binding": "CATALOG_KV",
       "id": "45e7b65546cc4d589afce85b5bc99851"
     }
+  ],
+
+  // R2: arquivos enviados pelos lojistas (logos). Crie com:
+  //   npx wrangler r2 bucket create catalogo-logos
+  "r2_buckets": [
+    {
+      "binding": "LOGOS",
+      "bucket_name": "catalogo-logos"
+    }
   ]
 
   // O sync diário roda num worker separado (workers/cron/) que chama /api/sync.

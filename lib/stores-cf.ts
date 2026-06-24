@@ -9,9 +9,11 @@ import type {
   CatalogStore,
   CatalogEntry,
   AuthStore,
+  AssetStore,
+  StoredAsset,
 } from "./stores";
 
-type Bindings = { DB: D1Database; CATALOG_KV: KVNamespace };
+type Bindings = { DB: D1Database; CATALOG_KV: KVNamespace; LOGOS: R2Bucket };
 
 function bindings(): Bindings {
   return getCloudflareContext().env as unknown as Bindings;
@@ -115,6 +117,23 @@ export class KVCatalogStore implements CatalogStore {
   async set(slug: string, catalog: Catalog): Promise<void> {
     const entry: CatalogEntry = { catalog, at: Date.now() };
     await bindings().CATALOG_KV.put(`catalog:${slug}`, JSON.stringify(entry));
+  }
+}
+
+export class R2AssetStore implements AssetStore {
+  async put(key: string, body: ArrayBuffer, contentType: string) {
+    await bindings().LOGOS.put(key, body, {
+      httpMetadata: { contentType },
+    });
+  }
+  async get(key: string): Promise<StoredAsset | null> {
+    const obj = await bindings().LOGOS.get(key);
+    if (!obj) return null;
+    return {
+      body: await obj.arrayBuffer(),
+      contentType:
+        obj.httpMetadata?.contentType ?? "application/octet-stream",
+    };
   }
 }
 

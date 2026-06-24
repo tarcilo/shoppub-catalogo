@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/admin-session";
 import { getTenantStore } from "@/lib/stores";
 import { validateSlug } from "@/lib/tenants";
 import { parseLojaForm } from "@/lib/loja-form";
+import { saveLogo, LogoError } from "@/lib/logo";
 import { LojaForm } from "@/components/LojaForm";
 
 async function createLoja(formData: FormData) {
@@ -23,9 +24,23 @@ async function createLoja(formData: FormData) {
     );
   }
 
+  let logo: string | undefined;
+  const file = formData.get("logo");
+  if (file instanceof File && file.size > 0) {
+    try {
+      logo = await saveLogo(file, slug);
+    } catch (e) {
+      if (e instanceof LogoError) {
+        redirect(`/admin/loja/new?erro=${encodeURIComponent(e.message)}`);
+      }
+      throw e;
+    }
+  }
+
   await getTenantStore().create({
     ...parseLojaForm(formData),
     slug,
+    logo,
     ownerEmail: email,
   });
   redirect("/admin/dashboard");
