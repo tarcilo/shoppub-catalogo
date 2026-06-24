@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { verifySession, SESSION_COOKIE } from "./auth";
+import { verifySession, isSuperAdmin, SESSION_COOKIE } from "./auth";
 
 // E-mail do admin logado, ou null.
 export async function getAdminEmail(): Promise<string | null> {
@@ -12,5 +12,12 @@ export async function getAdminEmail(): Promise<string | null> {
 export async function requireAdmin(): Promise<string> {
   const email = await getAdminEmail();
   if (!email) redirect("/admin");
+  return email;
+}
+
+// Exige super admin (gerencia usuários).
+export async function requireSuperAdmin(): Promise<string> {
+  const email = await requireAdmin();
+  if (!isSuperAdmin(email)) redirect("/admin/dashboard");
   return email;
 }

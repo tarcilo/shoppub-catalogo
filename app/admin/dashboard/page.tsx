@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/admin-session";
+import { isSuperAdmin } from "@/lib/auth";
 import { getTenantStore } from "@/lib/stores";
 
 export const metadata: Metadata = { title: "Painel — Catálogo Shoppub" };
@@ -8,6 +9,7 @@ export const metadata: Metadata = { title: "Painel — Catálogo Shoppub" };
 export default async function Dashboard() {
   const email = await requireAdmin();
   const lojas = await getTenantStore().listByOwner(email);
+  const superAdmin = isSuperAdmin(email);
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
@@ -53,12 +55,22 @@ export default async function Dashboard() {
         ))}
       </div>
 
-      <Link
-        href="/admin/loja/new"
-        className="inline-block mt-6 rounded-lg bg-black text-white font-medium px-5 py-2.5 text-sm hover:opacity-90"
-      >
-        + Nova loja
-      </Link>
+      <div className="mt-6 flex items-center gap-4">
+        <Link
+          href="/admin/loja/new"
+          className="inline-block rounded-lg bg-black text-white font-medium px-5 py-2.5 text-sm hover:opacity-90"
+        >
+          + Nova loja
+        </Link>
+        {superAdmin && (
+          <Link
+            href="/admin/usuarios"
+            className="text-sm font-medium text-black/60 hover:text-black"
+          >
+            Gerenciar usuários
+          </Link>
+        )}
+      </div>
     </div>
   );
 }

@@ -26,13 +26,16 @@ export interface CatalogStore {
   set(slug: string, catalog: Catalog): Promise<void>;
 }
 
+export interface AdminUser {
+  email: string;
+  passwordHash: string; // "saltHex:hashHex"
+}
+
 export interface AuthStore {
-  // allowlist: só e-mails liberados entram no painel
-  isAllowed(email: string): Promise<boolean>;
-  // magic link: guarda só o hash do token
-  saveMagicToken(hash: string, email: string, expiresAt: number): Promise<void>;
-  // valida + marca como usado; retorna o e-mail se válido, senão null
-  consumeMagicToken(hash: string): Promise<string | null>;
+  findUser(email: string): Promise<AdminUser | null>;
+  createUser(email: string, passwordHash: string): Promise<void>;
+  listUsers(): Promise<AdminUser[]>;
+  deleteUser(email: string): Promise<void>;
 }
 
 export interface StoredAsset {
@@ -46,14 +49,6 @@ export interface AssetStore {
   get(key: string): Promise<StoredAsset | null>;
 }
 
-// E-mails liberados no painel (dev). Em prod vem da tabela allowed_emails (D1).
-// Pode adicionar mais via env ADMIN_EMAILS="a@x.com,b@y.com".
-const SEED_ALLOWED = [
-  "tar@shoppub.com.br",
-  ...(process.env.ADMIN_EMAILS?.split(",").map((e) => e.trim().toLowerCase()) ??
-    []),
-].filter(Boolean);
-
 // ---------- Implementação em memória (desenvolvimento) ----------
 // Os dados ficam em globalThis para serem compartilhados entre rotas e
 // sobreviverem ao HMR do next dev (em produção quem guarda é D1/KV/R2).
@@ -61,14 +56,12 @@ const SEED_ALLOWED = [
 const mem = globalThis as unknown as {
   __tenants?: Map<string, Tenant>;
   __catalog?: Map<string, CatalogEntry>;
-  __allowed?: Set<string>;
-  __tokens?: Map<string, { email: string; expiresAt: number; used: boolean }>;
+  __users?: Map<string, AdminUser>;
   __assets?: Map<string, StoredAsset>;
 };
 mem.__tenants ??= new Map(SEED_TENANTS.map((t) => [t.slug, t]));
 mem.__catalog ??= new Map();
-mem.__allowed ??= new Set(SEED_ALLOWED);
-mem.__tokens ??= new Map();
+mem.__users ??= new Map();
 mem.__assets ??= new Map();
 
 class MemoryTenantStore implements TenantStore {
@@ -108,19 +101,21 @@ class MemoryCatalogStore implements CatalogStore {
 }
 
 class MemoryAuthStore implements AuthStore {
-  private allowed = mem.__allowed!;
-  private tokens = mem.__tokens!;
-  async isAllowed(email: string) {
-    return this.allowed.has(email.toLowerCase());
+  private users = mem.__users!;
+  async findUser(email: string) {
+    return this.users.get(email.toLowerCase()) ?? null;
   }
-  async saveMagicToken(hash: string, email: string, expiresAt: number) {
-    this.tokens.set(hash, { email, expiresAt, used: false });
+  async createUser(email: string, passwordHash: string) {
+    this.users.set(email.toLowerCase(), {
+      email: email.toLowerCase(),
+      passwordHash,
+    });
   }
-  async consumeMagicToken(hash: string) {
-    const t = this.tokens.get(hash);
-    if (!t || t.used || t.expiresAt < Date.now()) return null;
-    t.used = true;
-    return t.email;
+  async listUsers() {
+    return [...this.users.values()];
+  }
+  async deleteUser(email: string) {
+    this.users.delete(email.toLowerCase());
   }
 }
 

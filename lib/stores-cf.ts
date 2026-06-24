@@ -9,6 +9,7 @@ import type {
   CatalogStore,
   CatalogEntry,
   AuthStore,
+  AdminUser,
   AssetStore,
   StoredAsset,
 } from "./stores";
@@ -138,36 +139,40 @@ export class R2AssetStore implements AssetStore {
 }
 
 export class D1AuthStore implements AuthStore {
-  async isAllowed(email: string): Promise<boolean> {
+  async findUser(email: string): Promise<AdminUser | null> {
     const row = await bindings()
-      .DB.prepare("SELECT 1 FROM allowed_emails WHERE email = ?")
+      .DB.prepare(
+        "SELECT email, password_hash FROM usuarios WHERE email = ? AND password_hash IS NOT NULL"
+      )
       .bind(email.toLowerCase())
-      .first();
-    return !!row;
+      .first<{ email: string; password_hash: string }>();
+    return row ? { email: row.email, passwordHash: row.password_hash } : null;
   }
-  async saveMagicToken(hash: string, email: string, expiresAt: number) {
+  async createUser(email: string, passwordHash: string): Promise<void> {
     await bindings()
       .DB.prepare(
-        "INSERT INTO magic_tokens (token_hash, email, expires_at) VALUES (?, ?, ?)"
+        `INSERT INTO usuarios (email, password_hash) VALUES (?, ?)
+         ON CONFLICT(email) DO UPDATE SET password_hash = excluded.password_hash`
       )
-      .bind(hash, email, new Date(expiresAt).toISOString())
+      .bind(email.toLowerCase(), passwordHash)
       .run();
   }
-  async consumeMagicToken(hash: string): Promise<string | null> {
-    const db = bindings().DB;
-    const row = await db
-      .prepare(
-        "SELECT email, expires_at, used FROM magic_tokens WHERE token_hash = ?"
+  async listUsers(): Promise<AdminUser[]> {
+    const { results } = await bindings()
+      .DB.prepare(
+        "SELECT email, password_hash FROM usuarios WHERE password_hash IS NOT NULL ORDER BY email"
       )
-      .bind(hash)
-      .first<{ email: string; expires_at: string; used: number }>();
-    if (!row || row.used === 1) return null;
-    if (new Date(row.expires_at).getTime() < Date.now()) return null;
-    await db
-      .prepare("UPDATE magic_tokens SET used = 1 WHERE token_hash = ?")
-      .bind(hash)
+      .all<{ email: string; password_hash: string }>();
+    return (results ?? []).map((r) => ({
+      email: r.email,
+      passwordHash: r.password_hash,
+    }));
+  }
+  async deleteUser(email: string): Promise<void> {
+    await bindings()
+      .DB.prepare("DELETE FROM usuarios WHERE email = ?")
+      .bind(email.toLowerCase())
       .run();
-    return row.email;
   }
 }
 
