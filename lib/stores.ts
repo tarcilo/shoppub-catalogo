@@ -9,6 +9,11 @@ import { SEED_TENANTS } from "./tenants";
 export interface TenantStore {
   getBySlug(slug: string): Promise<Tenant | null>;
   list(): Promise<Tenant[]>;
+  // ---- usado pelo painel ----
+  listByOwner(email: string): Promise<Tenant[]>;
+  slugExists(slug: string): Promise<boolean>;
+  create(tenant: Tenant): Promise<void>;
+  update(slug: string, fields: Partial<Tenant>): Promise<void>;
 }
 
 export interface CatalogEntry {
@@ -47,6 +52,22 @@ class MemoryTenantStore implements TenantStore {
   }
   async list() {
     return [...this.bySlug.values()];
+  }
+  async listByOwner(email: string) {
+    const e = email.toLowerCase();
+    return [...this.bySlug.values()].filter(
+      (t) => t.ownerEmail?.toLowerCase() === e
+    );
+  }
+  async slugExists(slug: string) {
+    return this.bySlug.has(slug);
+  }
+  async create(tenant: Tenant) {
+    this.bySlug.set(tenant.slug, tenant);
+  }
+  async update(slug: string, fields: Partial<Tenant>) {
+    const cur = this.bySlug.get(slug);
+    if (cur) this.bySlug.set(slug, { ...cur, ...fields, slug });
   }
 }
 

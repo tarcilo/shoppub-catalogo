@@ -25,6 +25,7 @@ type LojaRow = {
   primary_color: string;
   logo_url: string | null;
   show_price: number;
+  owner_email?: string | null;
 };
 
 function rowToTenant(r: LojaRow): Tenant {
@@ -36,11 +37,13 @@ function rowToTenant(r: LojaRow): Tenant {
     primaryColor: r.primary_color,
     logo: r.logo_url ?? undefined,
     showPrice: r.show_price === 1,
+    ownerEmail: r.owner_email ?? undefined,
   };
 }
 
-const SELECT =
-  "SELECT slug, name, feed_url, whatsapp, primary_color, logo_url, show_price FROM lojas WHERE ativo = 1";
+const COLS =
+  "slug, name, feed_url, whatsapp, primary_color, logo_url, show_price, owner_email";
+const SELECT = `SELECT ${COLS} FROM lojas WHERE ativo = 1`;
 
 export class D1TenantStore implements TenantStore {
   async getBySlug(slug: string): Promise<Tenant | null> {
@@ -53,6 +56,55 @@ export class D1TenantStore implements TenantStore {
   async list(): Promise<Tenant[]> {
     const { results } = await bindings().DB.prepare(SELECT).all<LojaRow>();
     return (results ?? []).map(rowToTenant);
+  }
+  async listByOwner(email: string): Promise<Tenant[]> {
+    const { results } = await bindings()
+      .DB.prepare(`SELECT ${COLS} FROM lojas WHERE owner_email = ?`)
+      .bind(email.toLowerCase())
+      .all<LojaRow>();
+    return (results ?? []).map(rowToTenant);
+  }
+  async slugExists(slug: string): Promise<boolean> {
+    const row = await bindings()
+      .DB.prepare("SELECT 1 FROM lojas WHERE slug = ?")
+      .bind(slug)
+      .first();
+    return !!row;
+  }
+  async create(t: Tenant): Promise<void> {
+    await bindings()
+      .DB.prepare(
+        `INSERT INTO lojas (slug, name, feed_url, whatsapp, primary_color, logo_url, show_price, owner_email, ativo)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)`
+      )
+      .bind(
+        t.slug,
+        t.name,
+        t.feedUrl,
+        t.whatsapp,
+        t.primaryColor,
+        t.logo ?? null,
+        t.showPrice ? 1 : 0,
+        t.ownerEmail ?? null
+      )
+      .run();
+  }
+  async update(slug: string, f: Partial<Tenant>): Promise<void> {
+    await bindings()
+      .DB.prepare(
+        `UPDATE lojas SET name = ?, feed_url = ?, whatsapp = ?, primary_color = ?, logo_url = ?, show_price = ?, updated_at = datetime('now')
+         WHERE slug = ?`
+      )
+      .bind(
+        f.name ?? "",
+        f.feedUrl ?? "",
+        f.whatsapp ?? "",
+        f.primaryColor ?? "#4a3b2a",
+        f.logo ?? null,
+        f.showPrice ? 1 : 0,
+        slug
+      )
+      .run();
   }
 }
 

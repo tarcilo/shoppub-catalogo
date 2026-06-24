@@ -23,7 +23,31 @@ export type Tenant = {
    * Defina `true` para a loja que quiser mostrar preço.
    */
   showPrice?: boolean;
+  /** e-mail do dono da loja (quem edita no painel) */
+  ownerEmail?: string;
 };
+
+// Slugs reservados (rotas do app) — não podem ser usados como loja.
+export const RESERVED_SLUGS = new Set([
+  "admin",
+  "api",
+  "new",
+  "_next",
+  "robots.txt",
+  "sitemap.xml",
+  "favicon.ico",
+]);
+
+// Valida/normaliza um slug de loja. Retorna erro (string) ou null se ok.
+export function validateSlug(slug: string): string | null {
+  if (!slug) return "Informe o endereço da loja.";
+  if (!/^[a-z0-9-]+$/.test(slug))
+    return "Use só letras minúsculas, números e hífen.";
+  if (slug.length < 2 || slug.length > 40)
+    return "O endereço deve ter entre 2 e 40 caracteres.";
+  if (RESERVED_SLUGS.has(slug)) return "Esse endereço é reservado.";
+  return null;
+}
 
 // Seed de desenvolvimento. Em produção isso vem do D1 (tabela `lojas`).
 export const SEED_TENANTS: Tenant[] = [
@@ -33,6 +57,7 @@ export const SEED_TENANTS: Tenant[] = [
     feedUrl: "https://www.cavalariashop.com.br/feed/todos-os-produtos1/",
     whatsapp: "5511999999999",
     primaryColor: "#4a3b2a",
+    ownerEmail: "tar@shoppub.com.br",
   },
   {
     slug: "sacudidos",
@@ -40,6 +65,7 @@ export const SEED_TENANTS: Tenant[] = [
     feedUrl: "https://www.sacudidos.com.br/feed/todos-os-produtos/",
     whatsapp: "5511999999999",
     primaryColor: "#8B4513",
+    ownerEmail: "tar@shoppub.com.br",
   },
 ];
 
