@@ -1,6 +1,7 @@
 import { XMLParser } from "fast-xml-parser";
 import type { Tenant } from "./tenants";
 import { SAMPLE_FEED } from "./sample-feed";
+import { getCatalogStore } from "./stores";
 
 // ---------- Tipos do catálogo normalizado ----------
 
@@ -183,14 +184,12 @@ function parseFeed(xml: string): Catalog {
   };
 }
 
-// ---------- Cache em memória por feed (TTL) ----------
-// Guardamos o catálogo parseado em memória por 24h. O refresh "oficial" é
-// disparado 1x ao dia de madrugada via /api/sync (cron). O TTL aqui é só uma
-// rede de segurança caso o cron falhe. Em produção multi-instância isso deve
-// migrar para um store compartilhado (KV/Postgres) — ver README.
+// ---------- Catálogo: store + TTL ----------
+// O catálogo parseado vive no CatalogStore (memória em dev, KV em produção).
+// O refresh "oficial" é 1x ao dia de madrugada (cron). O TTL é rede de
+// segurança caso o cron falhe.
 
 const TTL_MS = 24 * 60 * 60 * 1000;
-const cache = new Map<string, { at: number; data: Catalog }>();
 const inflight = new Map<string, Promise<Catalog>>();
 
 async function fetchAndParse(feedUrl: string): Promise<Catalog> {
@@ -213,17 +212,17 @@ async function fetchAndParse(feedUrl: string): Promise<Catalog> {
 }
 
 export async function getCatalog(tenant: Tenant): Promise<Catalog> {
-  const key = tenant.feedUrl;
-  const hit = cache.get(key);
-  if (hit && Date.now() - hit.at < TTL_MS) return hit.data;
+  const store = getCatalogStore();
+  const hit = await store.get(tenant.slug);
+  if (hit && Date.now() - hit.at < TTL_MS) return hit.catalog;
 
-  // dedupe de requisições simultâneas para o mesmo feed
-  const existing = inflight.get(key);
+  // dedupe de requisições simultâneas para a mesma loja
+  const existing = inflight.get(tenant.slug);
   if (existing) return existing;
 
-  const promise = fetchAndParse(key)
-    .then((data) => {
-      cache.set(key, { at: Date.now(), data });
+  const promise = fetchAndParse(tenant.feedUrl)
+    .then(async (data) => {
+      await store.set(tenant.slug, data);
       return data;
     })
     .catch((err) => {
@@ -231,23 +230,23 @@ export async function getCatalog(tenant: Tenant): Promise<Catalog> {
       // conhecido (mesmo expirado). Só propaga o erro se nunca tivemos dados.
       if (hit) {
         console.error(
-          `[feed] falha ao atualizar ${key}, servindo cache antigo:`,
+          `[feed] falha ao atualizar ${tenant.slug}, servindo catálogo antigo:`,
           err
         );
-        return hit.data;
+        return hit.catalog;
       }
       throw err;
     })
-    .finally(() => inflight.delete(key));
+    .finally(() => inflight.delete(tenant.slug));
 
-  inflight.set(key, promise);
+  inflight.set(tenant.slug, promise);
   return promise;
 }
 
-// Força a releitura do feed e atualiza o cache (usado pelo sync de madrugada).
+// Força a releitura do feed e atualiza o store (usado pelo sync de madrugada).
 export async function refreshCatalog(tenant: Tenant): Promise<Catalog> {
   const data = await fetchAndParse(tenant.feedUrl);
-  cache.set(tenant.feedUrl, { at: Date.now(), data });
+  await getCatalogStore().set(tenant.slug, data);
   return data;
 }
 

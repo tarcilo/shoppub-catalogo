@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getCurrentTenant } from "@/lib/tenant";
+import { requireTenant } from "@/lib/tenant";
 import { shouldShowPrice } from "@/lib/tenants";
 import { getProduct } from "@/lib/feed";
 import { ProductDetail } from "@/components/ProductDetail";
@@ -9,10 +9,10 @@ import { ProductDetail } from "@/components/ProductDetail";
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ loja: string; id: string }>;
 }): Promise<Metadata> {
-  const { id } = await params;
-  const tenant = await getCurrentTenant();
+  const { loja, id } = await params;
+  const tenant = await requireTenant(loja);
   const product = await getProduct(tenant, id);
   if (!product) return { title: "Produto não encontrado" };
 
@@ -34,10 +34,10 @@ export async function generateMetadata({
 export default async function ProdutoPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ loja: string; id: string }>;
 }) {
-  const { id } = await params;
-  const tenant = await getCurrentTenant();
+  const { loja, id } = await params;
+  const tenant = await requireTenant(loja);
   const product = await getProduct(tenant, id);
 
   if (!product) notFound();
@@ -72,20 +72,21 @@ export default async function ProdutoPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+
       {/* Breadcrumb */}
       <nav className="text-sm text-foreground/50 mb-5 flex flex-wrap gap-1">
-        <Link href="/" className="hover:text-primary">
+        <Link href={`/${loja}`} className="hover:text-primary">
           Início
         </Link>
         <span>/</span>
-        <Link href="/produtos" className="hover:text-primary">
+        <Link href={`/${loja}/produtos`} className="hover:text-primary">
           Produtos
         </Link>
         {product.categories[0] && (
           <>
             <span>/</span>
             <Link
-              href={`/produtos?categoria=${encodeURIComponent(product.category)}`}
+              href={`/${loja}/produtos?categoria=${encodeURIComponent(product.category)}`}
               className="hover:text-primary"
             >
               {product.categories[0]}

@@ -1,11 +1,10 @@
-import { getCurrentTenant } from "@/lib/tenant";
 import { getCatalog } from "@/lib/feed";
+import type { Tenant } from "@/lib/tenants";
 
 // Aviso (só dev) de que o feed real está fora do ar e estamos usando a amostra.
-export async function SampleBanner() {
+export async function SampleBanner({ tenant }: { tenant: Tenant }) {
   let isSample = false;
   try {
-    const tenant = await getCurrentTenant();
     const catalog = await getCatalog(tenant);
     isSample = catalog.isSample === true;
   } catch {

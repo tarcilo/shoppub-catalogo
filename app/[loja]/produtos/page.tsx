@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getCurrentTenant } from "@/lib/tenant";
+import { requireTenant } from "@/lib/tenant";
 import { shouldShowPrice } from "@/lib/tenants";
 import {
   getCatalog,
@@ -40,12 +40,15 @@ type SearchParams = Promise<{
 }>;
 
 export default async function ProdutosPage({
+  params,
   searchParams,
 }: {
+  params: Promise<{ loja: string }>;
   searchParams: SearchParams;
 }) {
+  const { loja } = await params;
   const sp = await searchParams;
-  const tenant = await getCurrentTenant();
+  const tenant = await requireTenant(loja);
   const catalog = await getCatalog(tenant);
   const showPrice = shouldShowPrice(tenant);
 
@@ -84,7 +87,7 @@ export default async function ProdutosPage({
       if (v) params.set(k, v);
     }
     const qs = params.toString();
-    return `/produtos${qs ? `?${qs}` : ""}`;
+    return `/${loja}/produtos${qs ? `?${qs}` : ""}`;
   };
 
   // toggle: se já está ativo, remove o filtro
@@ -211,7 +214,7 @@ export default async function ProdutosPage({
 
           {hasActiveFilters && (
             <Link
-              href="/produtos"
+              href={`/${loja}/produtos`}
               className="inline-block text-sm text-foreground/50 underline hover:text-primary"
             >
               Limpar filtros
@@ -231,7 +234,7 @@ export default async function ProdutosPage({
               {filtered.length}{" "}
               {filtered.length === 1 ? "produto" : "produtos"}
             </div>
-            <SortSelect />
+            <SortSelect loja={loja} />
           </div>
 
           {pageItems.length === 0 ? (
@@ -243,6 +246,7 @@ export default async function ProdutosPage({
               {pageItems.map((p, i) => (
                 <ProductCard
                   key={p.id}
+                  loja={loja}
                   product={p}
                   showPrice={showPrice}
                   priority={i === 0}

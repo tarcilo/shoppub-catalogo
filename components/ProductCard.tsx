@@ -4,10 +4,12 @@ import type { Product } from "@/lib/feed";
 import { formatBRL } from "@/lib/format";
 
 export function ProductCard({
+  loja,
   product,
   showPrice,
   priority = false,
 }: {
+  loja: string;
   product: Product;
   showPrice: boolean;
   priority?: boolean;
@@ -17,7 +19,7 @@ export function ProductCard({
 
   return (
     <Link
-      href={`/produto/${product.id}`}
+      href={`/${loja}/produto/${product.id}`}
       className="group flex flex-col rounded-lg border border-black/10 overflow-hidden bg-white hover:shadow-md transition-shadow"
     >
       <div className="relative aspect-square bg-black/[0.03]">

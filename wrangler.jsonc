@@ -1,0 +1,38 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "catalogo-shoppub",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2025-03-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "observability": { "enabled": true },
+
+  // D1: tabela de lojas (e usuários/tokens do painel). Crie com:
+  //   npx wrangler d1 create catalogo-shoppub
+  // e cole o database_id retornado abaixo.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "catalogo-shoppub",
+      "database_id": "PREENCHER_APOS_wrangler_d1_create",
+      "migrations_dir": "migrations"
+    }
+  ],
+
+  // KV: catálogo já parseado por loja (catalog:{slug}). Crie com:
+  //   npx wrangler kv namespace create CATALOG_KV
+  // e cole o id retornado abaixo.
+  "kv_namespaces": [
+    {
+      "binding": "CATALOG_KV",
+      "id": "PREENCHER_APOS_wrangler_kv_namespace_create"
+    }
+  ],
+
+  // Sync diário de madrugada (03h BRT = 06h UTC). O handler scheduled chama a
+  // mesma lógica de refreshCatalog para cada loja ativa.
+  "triggers": { "crons": ["0 6 * * *"] }
+}

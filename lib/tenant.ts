@@ -1,9 +1,15 @@
-import { headers } from "next/headers";
-import { getTenantByHost, type Tenant } from "./tenants";
+import { notFound } from "next/navigation";
+import { getTenantStore } from "./stores";
+import type { Tenant } from "./tenants";
 
-// Resolve a loja atual a partir do host da requisição (subdomínio).
-export async function getCurrentTenant(): Promise<Tenant> {
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host");
-  return getTenantByHost(host);
+// Resolve a loja pelo slug da URL (catalogo.shoppub.io/{slug}).
+export async function getTenantBySlug(slug: string): Promise<Tenant | null> {
+  return getTenantStore().getBySlug(slug);
+}
+
+// Igual ao acima, mas dispara 404 quando a loja não existe.
+export async function requireTenant(slug: string): Promise<Tenant> {
+  const tenant = await getTenantBySlug(slug);
+  if (!tenant) notFound();
+  return tenant;
 }

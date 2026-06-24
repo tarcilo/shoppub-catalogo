@@ -9,7 +9,7 @@ const OPTIONS = [
   { value: "nome", label: "Nome (A-Z)" },
 ];
 
-export function SortSelect() {
+export function SortSelect({ loja }: { loja: string }) {
   const router = useRouter();
   const params = useSearchParams();
   const current = params.get("ordenar") ?? "relevancia";
@@ -19,7 +19,7 @@ export function SortSelect() {
     if (value === "relevancia") next.delete("ordenar");
     else next.set("ordenar", value);
     next.delete("page");
-    router.push(`/produtos?${next.toString()}`);
+    router.push(`/${loja}/produtos?${next.toString()}`);
   }
 
   return (

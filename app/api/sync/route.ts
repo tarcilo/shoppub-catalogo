@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAllTenants } from "@/lib/tenants";
+import { getTenantStore } from "@/lib/stores";
 import { refreshCatalog } from "@/lib/feed";
 
 export const dynamic = "force-dynamic";
@@ -32,7 +32,7 @@ export async function GET(request: Request) {
     });
   }
 
-  const tenants = getAllTenants();
+  const tenants = await getTenantStore().list();
   const results = await Promise.all(
     tenants.map(async (t) => {
       try {

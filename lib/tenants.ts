@@ -1,9 +1,11 @@
-// Configuração multi-tenant do catálogo.
-// Cada loja é identificada pelo host (subdomínio) da requisição.
-// No MVP isso vive aqui em memória; depois vira tabela/painel de cadastro.
+// Modelo da loja (tenant). Cada loja é identificada por um `slug` e o catálogo
+// público vive em catalogo.shoppub.io/{slug}.
+//
+// Os dados ficam no TenantStore (lib/stores.ts). Em dev, a fonte é o SEED abaixo;
+// em produção (Cloudflare) será a tabela `lojas` no D1, preenchida pelo painel.
 
 export type Tenant = {
-  /** identificador interno da loja */
+  /** identificador da loja na URL: catalogo.shoppub.io/{slug} */
   slug: string;
   /** nome exibido no catálogo */
   name: string;
@@ -23,41 +25,25 @@ export type Tenant = {
   showPrice?: boolean;
 };
 
-// Lista de lojas atendidas. A chave é o host completo do subdomínio.
-const TENANTS: Record<string, Tenant> = {
-  "catalogo.cavalariashop.com.br": {
+// Seed de desenvolvimento. Em produção isso vem do D1 (tabela `lojas`).
+export const SEED_TENANTS: Tenant[] = [
+  {
     slug: "cavalaria",
     name: "Cavalaria",
     feedUrl: "https://www.cavalariashop.com.br/feed/todos-os-produtos1/",
     whatsapp: "5511999999999",
     primaryColor: "#4a3b2a",
   },
-  "catalogo.sacudidos.com.br": {
+  {
     slug: "sacudidos",
     name: "Sacudido's",
     feedUrl: "https://www.sacudidos.com.br/feed/todos-os-produtos/",
     whatsapp: "5511999999999",
     primaryColor: "#8B4513",
   },
-};
-
-// Loja usada em desenvolvimento local (localhost) e como fallback.
-export const DEFAULT_TENANT_HOST = "catalogo.cavalariashop.com.br";
-
-export function getAllTenants(): Tenant[] {
-  return Object.values(TENANTS);
-}
+];
 
 // Por padrão o catálogo é "sob consulta" — só mostra preço quando showPrice === true.
 export function shouldShowPrice(tenant: Tenant): boolean {
   return tenant.showPrice === true;
-}
-
-export function getTenantByHost(host: string | null | undefined): Tenant {
-  if (host) {
-    // remove porta (localhost:3000) e normaliza
-    const clean = host.split(":")[0].toLowerCase();
-    if (TENANTS[clean]) return TENANTS[clean];
-  }
-  return TENANTS[DEFAULT_TENANT_HOST];
 }

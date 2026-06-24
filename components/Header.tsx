@@ -2,11 +2,12 @@ import Link from "next/link";
 import type { Tenant } from "@/lib/tenants";
 
 export function Header({ tenant }: { tenant: Tenant }) {
+  const base = `/${tenant.slug}`;
   return (
     <header className="border-b border-black/10 bg-white sticky top-0 z-10">
       <div className="mx-auto max-w-6xl px-4 py-3 flex items-center gap-4">
         <Link
-          href="/"
+          href={base}
           className="text-xl font-bold tracking-tight text-primary shrink-0"
         >
           {tenant.logo ? (
@@ -17,7 +18,7 @@ export function Header({ tenant }: { tenant: Tenant }) {
           )}
         </Link>
 
-        <form action="/produtos" className="flex-1 max-w-md ml-auto">
+        <form action={`${base}/produtos`} className="flex-1 max-w-md ml-auto">
           <input
             type="search"
             name="busca"
@@ -28,7 +29,7 @@ export function Header({ tenant }: { tenant: Tenant }) {
         </form>
 
         <Link
-          href="/produtos"
+          href={`${base}/produtos`}
           className="text-sm font-medium text-foreground/70 hover:text-primary hidden sm:block"
         >
           Ver tudo
