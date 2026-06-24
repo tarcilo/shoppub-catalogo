@@ -1,0 +1,13 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "catalogo-cron",
+  "main": "index.ts",
+  "compatibility_date": "2025-03-01",
+
+  // 03h BRT = 06h UTC.
+  "triggers": { "crons": ["0 6 * * *"] },
+
+  // URL pública do catálogo. SYNC_TOKEN entra como secret:
+  //   cd workers/cron && npx wrangler secret put SYNC_TOKEN
+  "vars": { "CATALOG_URL": "https://catalogo.shoppub.io" }
+}

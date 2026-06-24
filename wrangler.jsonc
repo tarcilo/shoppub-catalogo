@@ -36,9 +36,7 @@
       "binding": "CATALOG_KV",
       "id": "PREENCHER_APOS_wrangler_kv_namespace_create"
     }
-  ],
+  ]
 
-  // Sync diário de madrugada (03h BRT = 06h UTC). O handler scheduled chama a
-  // mesma lógica de refreshCatalog para cada loja ativa.
-  "triggers": { "crons": ["0 6 * * *"] }
+  // O sync diário roda num worker separado (workers/cron/) que chama /api/sync.
 }

@@ -81,23 +81,32 @@ Se o feed da loja estiver fora do ar **em dev**, a app usa a amostra em
 Em produção isso nunca acontece — o erro vira a tela "catálogo indisponível"
 (`app/error.tsx`).
 
-## Deploy (Cloudflare) — passos
+## Deploy (Cloudflare)
 
-1. `npm i @opennextjs/cloudflare && npm i -D wrangler @cloudflare/workers-types`
+O adaptador (`@opennextjs/cloudflare`), o wrangler e a seleção D1/KV em `lib/stores.ts`
+**já estão prontos** — `lib/stores.ts` usa D1/KV quando há bindings (Worker) e memória em
+`next dev`. Falta apenas rodar os comandos autenticados na conta Cloudflare.
+
+**App (catalogo.shoppub.io):**
+
+1. `npx wrangler login`
 2. `npx wrangler d1 create catalogo-shoppub` → cole o `database_id` no `wrangler.jsonc`.
 3. `npx wrangler kv namespace create CATALOG_KV` → cole o `id` no `wrangler.jsonc`.
-4. `npx wrangler d1 migrations apply catalogo-shoppub` (aplica `migrations/`).
-5. `npx wrangler types` (gera os tipos das bindings `DB` / `CATALOG_KV`).
-6. Remover `lib/stores-cf.ts` do `exclude` no `tsconfig.json` e ligar as implementações
-   D1/KV em `lib/stores.ts`.
-7. Adicionar o handler `scheduled` (cron) chamando `refreshCatalog` para cada loja ativa.
-8. `npx opennextjs-cloudflare build && npx wrangler deploy`.
-9. Definir `SYNC_TOKEN` como secret: `npx wrangler secret put SYNC_TOKEN`.
+4. `npx wrangler d1 migrations apply catalogo-shoppub --remote` (cria tabelas + seed).
+5. `npx wrangler secret put SYNC_TOKEN` (cole um valor aleatório).
+6. `npx opennextjs-cloudflare build && npx wrangler deploy`
+   → o domínio `catalogo.shoppub.io` é provisionado automaticamente (DNS + SSL).
+
+> Ao editar `wrangler.jsonc`, rode `npx wrangler types` para atualizar `worker-configuration.d.ts`.
+
+**Cron de sync (worker separado, `workers/cron/`):**
+
+7. `cd workers/cron && npx wrangler secret put SYNC_TOKEN` (mesmo valor do passo 5).
+8. `npx wrangler deploy` → agenda o disparo diário (03h BRT) chamando `/api/sync`.
 
 ## Pendências (próximas fases)
 
 - **Painel + login** (`/admin`, magic link por e-mail) para o lojista cadastrar a loja.
-- **Ligar D1/KV** (passos 5–7 acima) — código de referência já em `lib/stores-cf.ts`.
 - **Domínio próprio** opcional do cliente via Cloudflare for SaaS (custom hostnames).
 - **Blocklist de categorias** por loja (o feed expõe categorias internas, ex: "INATIVO").
 - **Heurística de título**: refinar a limpeza do título base em feeds inconsistentes.

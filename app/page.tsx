@@ -2,9 +2,12 @@ import Link from "next/link";
 import { getTenantStore } from "@/lib/stores";
 
 // Landing de catalogo.shoppub.io. Em dev lista as lojas do seed para facilitar
-// a navegação; em produção isso vira uma página institucional / acesso ao painel.
+// a navegação; em produção é institucional (não expõe a lista de lojas).
 export default async function Landing() {
-  const lojas = await getTenantStore().list();
+  const lojas =
+    process.env.NODE_ENV !== "production"
+      ? await getTenantStore().list()
+      : [];
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-20 text-center">

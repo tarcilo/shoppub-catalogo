@@ -44,16 +44,23 @@ class MemoryCatalogStore implements CatalogStore {
 }
 
 // ---------- Seleção da implementação ----------
-// Hoje sempre memória. Quando o runtime Cloudflare estiver ligado, este é o
-// único ponto a trocar para as implementações D1/KV (sem mexer no resto).
+// Runtime Cloudflare (Worker) → D1/KV. Caso contrário (next dev) → memória.
 
-const tenantStore: TenantStore = new MemoryTenantStore();
-const catalogStore: CatalogStore = new MemoryCatalogStore();
+import {
+  D1TenantStore,
+  KVCatalogStore,
+  hasCloudflareBindings,
+} from "./stores-cf";
+
+const memoryTenantStore = new MemoryTenantStore();
+const memoryCatalogStore = new MemoryCatalogStore();
+const d1TenantStore = new D1TenantStore();
+const kvCatalogStore = new KVCatalogStore();
 
 export function getTenantStore(): TenantStore {
-  return tenantStore;
+  return hasCloudflareBindings() ? d1TenantStore : memoryTenantStore;
 }
 
 export function getCatalogStore(): CatalogStore {
-  return catalogStore;
+  return hasCloudflareBindings() ? kvCatalogStore : memoryCatalogStore;
 }

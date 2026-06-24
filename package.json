@@ -9,12 +9,14 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@opennextjs/cloudflare": "^1.19.11",
     "fast-xml-parser": "^5.9.3",
     "next": "16.2.9",
     "react": "19.2.4",
     "react-dom": "19.2.4"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260624.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -22,6 +24,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wrangler": "^4.104.0"
   }
 }
