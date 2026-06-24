@@ -5,6 +5,10 @@
   "compatibility_date": "2025-03-01",
   "compatibility_flags": ["nodejs_compat"],
 
+  // Serve só pelo domínio oficial (sem a URL *.workers.dev) — evita conteúdo
+  // duplicado para SEO.
+  "workers_dev": false,
+
   // Domínio público do catálogo. Com custom_domain: true, o `wrangler deploy`
   // cria o registro DNS e o certificado SSL automaticamente (shoppub.io já está
   // na conta Cloudflare). NÃO adicionar registro A manual para este hostname.

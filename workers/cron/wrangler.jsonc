@@ -4,6 +4,10 @@
   "main": "index.ts",
   "compatibility_date": "2025-03-01",
 
+  // Worker de cron não precisa de URL pública.
+  "workers_dev": false,
+  "preview_urls": false,
+
   // 03h BRT = 06h UTC.
   "triggers": { "crons": ["0 6 * * *"] },
 
