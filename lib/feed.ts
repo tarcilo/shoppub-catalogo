@@ -277,7 +277,11 @@ export function filterProducts(
   let out = products;
 
   if (q.categoria) {
-    out = out.filter((p) => p.category === q.categoria);
+    // filtra pela categoria de topo (1º nível do product_type), batendo com a
+    // contagem da barra lateral. Aceita também o product_type completo (compat).
+    out = out.filter(
+      (p) => (p.categories[0] ?? p.category) === q.categoria || p.category === q.categoria
+    );
   }
 
   if (q.tamanho) {

@@ -86,7 +86,7 @@ export default async function ProdutoPage({
           <>
             <span>/</span>
             <Link
-              href={`/${loja}/produtos?categoria=${encodeURIComponent(product.category)}`}
+              href={`/${loja}/produtos?categoria=${encodeURIComponent(product.categories[0] ?? product.category)}`}
               className="hover:text-primary"
             >
               {product.categories[0]}

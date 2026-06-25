@@ -42,7 +42,7 @@ export default async function LojaHome({
             {categories.map((c) => (
               <Link
                 key={c.name}
-                href={`/${loja}/produtos?categoria=${encodeURIComponent(c.full)}`}
+                href={`/${loja}/produtos?categoria=${encodeURIComponent(c.name)}`}
                 className="rounded-lg border border-black/10 px-4 py-3 text-sm font-medium hover:border-primary hover:text-primary transition-colors"
               >
                 {c.name}

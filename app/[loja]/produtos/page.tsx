@@ -121,9 +121,9 @@ export default async function ProdutosPage({
               {categories.map((c) => (
                 <li key={c.name}>
                   <Link
-                    href={buildUrl({ categoria: c.full })}
+                    href={buildUrl({ categoria: c.name })}
                     className={`block py-1 hover:text-primary ${
-                      sp.categoria === c.full
+                      sp.categoria === c.name
                         ? "text-primary font-medium"
                         : "text-foreground/70"
                     }`}
