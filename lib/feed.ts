@@ -100,6 +100,29 @@ function baseTitle(title: string, variationLabel: string): string {
   return title.endsWith(suffix) ? title.slice(0, -suffix.length) : title;
 }
 
+// Ordem de tamanhos por letra (roupas) — antes do alfabético.
+const SIZE_ORDER = ["PP", "P", "M", "G", "GG", "XG", "XGG", "EG", "EGG"];
+
+// Compara dois tamanhos: numéricos em ordem numérica; letras na ordem PP<P<M<G…;
+// o resto, alfabético. Numéricos vêm antes das letras.
+export function compareSizes(a: string, b: string): number {
+  const ta = a.trim();
+  const tb = b.trim();
+  const na = parseFloat(ta);
+  const nb = parseFloat(tb);
+  const aNum = Number.isFinite(na) && /^\d/.test(ta);
+  const bNum = Number.isFinite(nb) && /^\d/.test(tb);
+  if (aNum && bNum) return na - nb;
+  if (aNum) return -1;
+  if (bNum) return 1;
+  const ia = SIZE_ORDER.indexOf(ta.toUpperCase());
+  const ib = SIZE_ORDER.indexOf(tb.toUpperCase());
+  if (ia !== -1 && ib !== -1) return ia - ib;
+  if (ia !== -1) return -1;
+  if (ib !== -1) return 1;
+  return ta.localeCompare(tb);
+}
+
 function parseFeed(xml: string): Catalog {
   const data = parser.parse(xml);
   const feed = data?.feed ?? {};
@@ -135,6 +158,9 @@ function parseFeed(xml: string): Catalog {
         image: str(e["g:image_link"]),
       };
     });
+
+    // variações sempre em ordem crescente de tamanho
+    variations.sort((a, b) => compareSizes(a.label, b.label));
 
     const firstLabel =
       str(first["c:main_attribute_value"]) || str(first["g:size"]);
@@ -342,12 +368,7 @@ export function facets(products: Product[]): {
       if (v.color) colorSet.add(v.color);
     }
   }
-  const sizes = Array.from(sizeSet).sort((a, b) => {
-    const na = parseFloat(a);
-    const nb = parseFloat(b);
-    if (Number.isFinite(na) && Number.isFinite(nb)) return na - nb;
-    return a.localeCompare(b);
-  });
+  const sizes = Array.from(sizeSet).sort(compareSizes);
   const colors = Array.from(colorSet).sort((a, b) => a.localeCompare(b));
   return { sizes, colors };
 }
