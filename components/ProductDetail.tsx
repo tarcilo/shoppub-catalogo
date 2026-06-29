@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import type { Product } from "@/lib/feed";
 import { formatBRL } from "@/lib/format";
+import { ProductGallery } from "./ProductGallery";
 
 export function ProductDetail({
   product,
@@ -14,7 +14,6 @@ export function ProductDetail({
   whatsapp: string;
   showPrice: boolean;
 }) {
-  const [activeImage, setActiveImage] = useState(0);
   // variações com rótulo (tamanhos). Remove duplicados mantendo a primeira.
   const variations = product.variations.filter((v) => v.label);
   const [selected, setSelected] = useState<string | null>(
@@ -35,43 +34,8 @@ export function ProductDetail({
 
   return (
     <div className="grid md:grid-cols-2 gap-8">
-      {/* Galeria */}
-      <div>
-        <div className="relative aspect-square rounded-lg overflow-hidden bg-black/[0.03] border border-black/10">
-          {product.images[activeImage] && (
-            <Image
-              src={product.images[activeImage]}
-              alt={product.title}
-              fill
-              sizes="(max-width: 768px) 100vw, 50vw"
-              className="object-cover"
-              priority
-            />
-          )}
-        </div>
-        {product.images.length > 1 && (
-          <div className="flex gap-2 mt-3 flex-wrap">
-            {product.images.map((img, i) => (
-              <button
-                key={img}
-                onClick={() => setActiveImage(i)}
-                className={`relative w-16 h-16 rounded-md overflow-hidden border-2 ${
-                  i === activeImage ? "border-primary" : "border-black/10"
-                }`}
-                aria-label={`Imagem ${i + 1}`}
-              >
-                <Image
-                  src={img}
-                  alt=""
-                  fill
-                  sizes="64px"
-                  className="object-cover"
-                />
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+      {/* Galeria com zoom */}
+      <ProductGallery images={product.images} title={product.title} />
 
       {/* Infos */}
       <div>
